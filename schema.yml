@@ -1,0 +1,6213 @@
+openapi: 3.0.1
+info:
+  title: BOND WORKS
+  description: BOND WORKSの認証・マスタ系のAPI
+  termsOfService: url
+  contact:
+    email: bondgate-develop@rhservice.jp
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  version: 1.0.0
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
+servers:
+  - url: 'https://bw-portal-mock-051e5d9f7551.herokuapp.com'
+tags:
+  - name: users
+    description: ユーザー管理
+  - name: userGroups
+    description: ユーザーグループ管理
+  - name: facilities
+    description: 施設管理
+  - name: user/products
+    description: 契約製品確認
+  - name: productUsers
+    description: 製品ユーザー管理
+  - name: facilityAreas
+    description: 施設・エリア管理
+  - name: facilityFloors
+    description: 施設・フロア管理
+  - name: managementDivisions
+    description: 管理区分管理
+  - name: industries
+    description: 業種管理
+  - name: shops
+    description: 施設・ショップ管理
+  - name: areaShops
+    description: エリア・ショップ管理
+  - name: floorShops
+    description: フロア・ショップ管理
+  - name: shopCompanies
+    description: 運営会社管理
+  - name: shopEmployees
+    description: 施設・ショップ店員管理
+  - name: dashboards
+    description: ダッシュボード
+  - name: employeeCards
+    description: 従業員証
+  - name: accessRestrictions
+    description: アクセス制限設定
+  - name: user/authentications
+    description: 認証
+  - name: logo
+    description: ロゴ設定
+  - name: products
+    description: 製品管理
+  - name: clientCompanies
+    description: 契約会社
+  - name: productContracts
+    description: 製品契約管理
+  - name: admin/users
+    description: リゾーム管理者管理
+  - name: admin/authentications
+    description: 認証
+  - name: master
+    description: マスタデータ
+x-tagGroups:
+  - name: 利用者向け機能
+    tags:
+      - users
+      - userGroups
+      - facilities
+      - user/products
+      - productUsers
+      - facilityAreas
+      - facilityFloors
+      - managementDivisions
+      - industries
+      - shops
+      - areaShops
+      - floorShops
+      - shopCompanies
+      - shopEmployees
+      - dashboards
+      - employeeCards
+      - accessRestrictions
+      - user/authentications
+      - logo
+  - name: リゾーム管理者向け機能
+    tags:
+      - products
+      - clientCompanies
+      - productContracts
+      - admin/users
+      - admin/authentications
+  - name: マスタデータ
+    tags:
+      - master
+paths:
+  /user/users/developer:
+    get:
+      tags:
+        - users
+      summary: デベロッパーユーザーの一覧取得
+      operationId: listDeveloperUsers
+      parameters:
+        - name: keywords
+          description: ユーザー名・ユーザーコード
+          in: query
+          schema:
+            type: string
+        - name: userGroupId
+          description: ユーザーグループID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: facilityId
+          description: 施設ID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: ユーザー1
+                        code:
+                          type: string
+                          example: '0001'
+                        facilities:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 1
+                              name:
+                                type: string
+                                example: 施設A
+                              code:
+                                type: string
+                                example: '0001'
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          example: false
+                  totalCount:
+                    type: integer
+                    example: 100
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - users
+      summary: デベロッパーユーザーの登録
+      operationId: addDeveloperUser
+      requestBody:
+        description: ユーザーの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - facilityIds
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ユーザーA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字  
+                    契約内のユーザーでユニーク制約
+                facilityIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                emails:
+                  type: array
+                  items:
+                    type: string
+                    example: test@example.com
+                  description: |
+                    RFC準拠のメールアドレス  
+                    契約会社内のユーザーでユニーク制約
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  /user/users/disaster_prevention_center:
+    get:
+      tags:
+        - users
+      summary: 防災センターユーザーの一覧取得
+      operationId: listDisasterPreventionCenterUsers
+      parameters:
+        - name: keywords
+          description: ユーザー名・ユーザーコード
+          in: query
+          schema:
+            type: string
+        - name: userGroupId
+          description: ユーザーグループID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: facilityId
+          description: 施設ID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: ユーザー1
+                        code:
+                          type: string
+                          example: '0001'
+                        facilities:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 1
+                              name:
+                                type: string
+                                example: 施設A
+                              code:
+                                type: string
+                                example: '0001'
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          example: false
+                  totalCount:
+                    type: integer
+                    example: 100
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - users
+      summary: 防災センターユーザーの登録
+      operationId: addDisasterPreventionCenterUser
+      requestBody:
+        description: ユーザーの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - facilityIds
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ユーザーA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字  
+                    契約内のユーザーでユニーク制約
+                facilityIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                emails:
+                  type: array
+                  items:
+                    type: string
+                    example: test@example.com
+                  description: |
+                    RFC準拠のメールアドレス  
+                    契約会社内のユーザーでユニーク制約
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  /user/users/shop:
+    get:
+      tags:
+        - users
+      summary: ショップユーザーの一覧取得
+      operationId: listShopUsers
+      parameters:
+        - name: keywords
+          description: |
+            ユーザー名・ユーザーコード  
+            ショップ名・ショップコード
+          in: query
+          schema:
+            type: string
+        - name: userGroup
+          description: ユーザーグループID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: facilityId
+          description: 施設ID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: shopId
+          description: ショップID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: staffType
+          description: スタッフ種別
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - manager
+              - employee
+            default: all
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: ユーザー1
+                        code:
+                          type: string
+                          example: '0001'
+                        facility:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 施設A
+                            code:
+                              type: string
+                              example: '0001'
+                        shop:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: ショップA
+                            code:
+                              type: string
+                              example: '0001'
+                        staffType:
+                          type: string
+                          enum:
+                            - manager
+                            - employee
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          example: false
+                  totalCount:
+                    type: integer
+                    example: 100
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - users
+      summary: ショップユーザーの登録
+      operationId: addShopUser
+      requestBody:
+        description: ショップユーザーの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - shopId
+                - staffType
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ショップユーザーA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字  
+                    施設内のユーザーでユニーク制約
+                shopId:
+                  type: integer
+                  example: 1
+                staffType:
+                  type: string
+                  enum:
+                    - manager
+                    - employee
+                emails:
+                  type: array
+                  items:
+                    type: string
+                    example: test@example.com
+                  description: |
+                    RFC準拠のメールアドレス  
+                    契約会社内のユーザーでユニーク制約
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/users/{id}':
+    get:
+      tags:
+        - users
+      summary: ユーザーの詳細取得
+      operationId: showUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: ユーザー1
+                      code:
+                        type: string
+                        example: '0001'
+                      userType:
+                        type: string
+                        enum:
+                          - developer
+                          - disasterPreventionCenter
+                          - shop
+                      staffType:
+                        type: string
+                        enum:
+                          - manager
+                          - employee
+                        description: ショップユーザーのみ
+                      facilities:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 施設A
+                            code:
+                              type: string
+                              example: '0001'
+                        description: デベロッパーと防災センターユーザーのみ
+                      facility:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 施設A
+                          code:
+                            type: string
+                            example: '0001'
+                        description: ショップユーザーのみ
+                      shop:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: ショップA
+                          code:
+                            type: string
+                            example: '0001'
+                        description: ショップユーザーのみ
+                      emails:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            email:
+                              type: string
+                              example: test@example.com
+                            status:
+                              type: string
+                              enum:
+                                - unconfirmed
+                                - confirmed
+                      passwordExpirationDate:
+                        type: string
+                        format: date
+                      isMaintenanceUser:
+                        type: boolean
+                      status:
+                        type: string
+                        enum:
+                          - active
+                          - inactive
+                      deactivateReason:
+                        type: string
+                        example: 利用停止
+                        description: 状態が無効の場合は必須項目
+                      locked:
+                        type: boolean
+                        example: false
+                      lockReason:
+                        type: string
+                        example: 障害の為、一時利用停止
+                        description: ロック状態がロック中の場合は必須項目
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: コミュニケーション
+                        code:
+                          type: string
+                          example: communication
+                        displayOrder:
+                          type: integer
+                          example: 1
+              examples:
+                developerUserResponse:
+                  value:
+                    user:
+                      id: 1
+                      name: デベロッパー1
+                      code: '0001'
+                      userType: developer
+                      facilities:
+                        - id: 1
+                          name: 施設A
+                          code: '0001'
+                      emails:
+                        - email: test@example.com
+                          status: unconfirmed
+                      passwordExpirationDate: '2020-01-01'
+                      isMaintenanceUser: false
+                      status: active
+                      locked: false
+                    products:
+                      - id: 1
+                        name: コミュニケーション
+                        code: communication
+                        displayOrder: 1
+                disasterPreventionUserResponse:
+                  value:
+                    user:
+                      id: 2
+                      name: 防災ユーザー1
+                      code: '0002'
+                      userType: disasterPreventionCenter
+                      facilities:
+                        - id: 2
+                          name: 施設B
+                          code: '0002'
+                      emails:
+                        - email: test2@example.com
+                          status: unconfirmed
+                      passwordExpirationDate: '2020-01-01'
+                      isMaintenanceUser: false
+                      status: active
+                      locked: false
+                    products:
+                      - id: 1
+                        name: コミュニケーション
+                        code: communication
+                        displayOrder: 1
+                shopUserResponse:
+                  value:
+                    user:
+                      id: 3
+                      name: ショップユーザー1
+                      code: '0003'
+                      userType: shop
+                      staffType: manager
+                      facility:
+                        id: 1
+                        name: 施設A
+                        code: '0001'
+                      shop:
+                        id: 1
+                        name: ショップA
+                        code: '0001'
+                      emails:
+                        - email: test3@example.com
+                          status: unconfirmed
+                      passwordExpirationDate: '2020-01-01'
+                      isMaintenanceUser: false
+                      status: active
+                      locked: false
+                    products:
+                      - id: 1
+                        name: コミュニケーション
+                        code: communication
+                        displayOrder: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/users/{id}/develoepr':
+    put:
+      tags:
+        - users
+      summary: デベロッパーユーザーの更新
+      operationId: updateDeveloperUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: ユーザーの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - facilityIds
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ユーザーA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字  
+                    契約内のユーザーでユニーク制約
+                facilityIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                emails:
+                  type: array
+                  items:
+                    type: string
+                    example: test@example.com
+                  description: |
+                    RFC準拠のメールアドレス  
+                    契約会社内のユーザーでユニーク制約
+        required: true
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/users/{id}/disaster_prevention_center':
+    put:
+      tags:
+        - users
+      summary: 防災センターユーザーの更新
+      operationId: updateDisasterPreventionCenterUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: ユーザーの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - facilityIds
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ユーザーA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字  
+                    契約内のユーザーでユニーク制約
+                facilityIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                emails:
+                  type: array
+                  items:
+                    type: string
+                    example: test@example.com
+                  description: |
+                    RFC準拠のメールアドレス  
+                    契約会社内のユーザーでユニーク制約
+        required: true
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/users/{id}/shop':
+    put:
+      tags:
+        - users
+      summary: ショップユーザーの更新
+      operationId: updateShopUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: ショップユーザーの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - shopId
+                - staffType
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ユーザーA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字  
+                    施設内のユーザーでユニーク制約
+                shopId:
+                  type: integer
+                  example: 1
+                staffType:
+                  type: string
+                  enum:
+                    - manager
+                    - employee
+                emails:
+                  type: array
+                  items:
+                    type: string
+                    example: test@example.com
+                  description: |
+                    RFC準拠のメールアドレス  
+                    契約会社内のユーザーでユニーク制約
+        required: true
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/users/{id}/reset_password':
+    patch:
+      tags:
+        - users
+      summary: ユーザーのパスワードリセット
+      operationId: resetPasswordUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/users/{id}/send_confirmation_mails':
+    patch:
+      tags:
+        - users
+      summary: ユーザーのメールアドレスに確認メールを送信
+      operationId: sendConfirmationUserMails
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/users/{id}/activate':
+    patch:
+      tags:
+        - users
+      summary: ユーザーの有効化
+      operationId: activateUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 3
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/users/{id}/deactivate':
+    patch:
+      tags:
+        - users
+      summary: ユーザーの無効化
+      operationId: deactivateUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/deactivateReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 3
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/users/{id}/lock':
+    patch:
+      tags:
+        - users
+      summary: ユーザーのロック
+      operationId: lockUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/lockReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 3
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/users/{id}/unlock':
+    patch:
+      tags:
+        - users
+      summary: ユーザーのロック解除
+      operationId: unlockUser
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 3
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  /user/users/export:
+    get:
+      tags:
+        - users
+      summary: ユーザー情報のエクスポート
+      operationId: exportUsers
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+  /user/users/import:
+    post:
+      tags:
+        - users
+      summary: ユーザー情報のインポート
+      operationId: importUsers
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: 正常
+          content: {}
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+  '/user/users/{id}/products':
+    post:
+      tags:
+        - users
+      summary: 利用製品の登録
+      operationId: addUserProduct
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 利用製品登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - productIds
+              type: object
+              properties:
+                productIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    example: 1
+        '400':
+          description: 契約数が上限に達している、ロックされている製品IDが含まれる
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/users/{userId}/products/{productId}':
+    delete:
+      tags:
+        - users
+      summary: 利用製品の削除
+      operationId: deleteUserProduct
+      parameters:
+        - name: userId
+          in: path
+          description: ユーザーID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: productId
+          in: path
+          description: 利用製品ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  /user/user_groups:
+    get:
+      tags:
+        - userGroups
+      summary: ユーザーグループの一覧取得
+      operationId: listUserGroups
+      parameters:
+        - name: keywords
+          description: ユーザーグループ名
+          in: query
+          schema:
+            type: string
+        - name: groupType
+          description: タイプ
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - common
+              - personal
+            default: all
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+            default: name
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userGroups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 本部デベロッパー
+                        groupType:
+                          type: string
+                          enum:
+                            - common
+                            - personal
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - userGroups
+      summary: ユーザーグループの登録
+      operationId: addUserGroup
+      requestBody:
+        description: ユーザーグループの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - groupType
+                - facilityIds
+                - userIds
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 本部デベロッパー
+                  maxLength: 128
+                groupType:
+                  type: string
+                  enum:
+                    - common
+                    - personal
+                facilityIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                  description: 所属施設のID
+                userIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                  description: |
+                    設定した施設に所属しているユーザーのID  
+                    ユーザー選択範囲内のユーザーIDのみ
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userGroupId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/user_groups/{id}':
+    get:
+      tags:
+        - userGroups
+      summary: ユーザーグループの詳細取得
+      operationId: showUserGroup
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーグループID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 本部デベロッパー
+                  groupType:
+                    type: string
+                    enum:
+                      - common
+                      - personal
+                  facilities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 施設A
+                        code:
+                          type: string
+                          example: '0001'
+                        users:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 1
+                              name:
+                                type: string
+                                example: デベロッパー1
+                              code:
+                                type: string
+                                example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    put:
+      tags:
+        - userGroups
+      summary: ユーザーグループの更新
+      operationId: updateUserGroup
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーグループID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: ユーザーグループの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - userIds
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 本部デベロッパー
+                  maxLength: 128
+                userIds:
+                  type: array
+                  items:
+                    type: integer
+                    example: 1
+                  description: |
+                    設定した施設に所属しているユーザーのID  
+                    ユーザー選択範囲内のユーザーIDのみ
+        required: true
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userGroupId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - userGroups
+      summary: ユーザーグループの削除
+      operationId: deleteUserGroup
+      parameters:
+        - name: id
+          in: path
+          description: ユーザーグループID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/areas':
+    get:
+      tags:
+        - facilityAreas
+      summary: エリアの一覧取得
+      operationId: listFacilityAreas
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keywords
+          description: エリア名・エリアコード
+          in: query
+          schema:
+            type: string
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 施設A
+                      code:
+                        type: string
+                        example: '0001'
+                  areas:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 東
+                        code:
+                          type: string
+                          example: east
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - inactive
+                        deactivateReason:
+                          type: string
+                          example: 利用停止
+                          description: 状態が無効の場合は必須項目
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - facilityAreas
+      summary: エリアの登録
+      operationId: addFacilityArea
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: エリアの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 東
+                  maxLength: 128
+                code:
+                  type: string
+                  example: east
+                  maxLength: 12
+                  description: |
+                    半角英数字12文字以内  
+                    施設内でユニーク制約
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  areaId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/areas/{id}':
+    put:
+      tags:
+        - facilityAreas
+      summary: エリアの更新
+      operationId: updateFacilityArea
+      parameters:
+        - name: id
+          in: path
+          description: エリアID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: エリアの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 東
+                  maxLength: 128
+                code:
+                  type: string
+                  example: east
+                  maxLength: 12
+                  description: |
+                    半角英数字12文字以内  
+                    施設内でユニーク制約
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  areaId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/areas/{id}/activate':
+    patch:
+      tags:
+        - facilityAreas
+      summary: エリアの有効化
+      operationId: activateFacilityArea
+      parameters:
+        - name: id
+          in: path
+          description: エリアID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  areaId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/areas/{id}/deactivate':
+    patch:
+      tags:
+        - facilityAreas
+      summary: エリアの無効化
+      operationId: deactivateFacilityArea
+      parameters:
+        - name: id
+          in: path
+          description: エリアID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/deactivateReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  areaId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/floors':
+    get:
+      tags:
+        - facilityFloors
+      summary: フロアの一覧取得
+      operationId: listFacilityFloors
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keywords
+          description: フロア名・フロアコード
+          in: query
+          schema:
+            type: string
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facility:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 施設A
+                      code:
+                        type: string
+                        example: '0001'
+                  floors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 1F
+                        code:
+                          type: string
+                          example: 1F
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - inactive
+                        deactivateReason:
+                          type: string
+                          example: 利用停止
+                          description: 状態が無効の場合は必須項目
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - facilityFloors
+      summary: フロアの登録
+      operationId: addFacilityFloor
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: フロアの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 1F
+                  maxLength: 128
+                code:
+                  type: string
+                  example: 1F
+                  maxLength: 12
+                  description: |
+                    半角英数字12文字以内  
+                    施設内でユニーク制約
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  floorId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/floors/{id}':
+    put:
+      tags:
+        - facilityFloors
+      summary: フロアの更新
+      operationId: updateFacilityFloor
+      parameters:
+        - name: id
+          in: path
+          description: フロアID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: フロアの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 1F
+                  maxLength: 128
+                code:
+                  type: string
+                  example: 1F
+                  maxLength: 12
+                  description: |
+                    半角英数字12文字以内  
+                    施設内でユニーク制約
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  floorId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/floors/{id}/activate':
+    patch:
+      tags:
+        - facilityFloors
+      summary: フロアの有効化
+      operationId: activateFacilityFloor
+      parameters:
+        - name: id
+          in: path
+          description: フロアID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  floorId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/floors/{id}/deactivate':
+    patch:
+      tags:
+        - facilityFloors
+      summary: フロアの無効化
+      operationId: deactivateFacilityFloor
+      parameters:
+        - name: id
+          in: path
+          description: フロアID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/deactivateReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  floorId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  /user/facilities:
+    get:
+      tags:
+        - facilities
+      summary: 施設の一覧取得
+      operationId: listFacilities
+      parameters:
+        - name: keywords
+          description: 施設名・施設コード
+          in: query
+          schema:
+            type: string
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+              - startDate
+              - status
+              - locked
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilities:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: サンプルショッピングセンター
+                        code:
+                          type: string
+                          example: '0001'
+                        startDate:
+                          type: string
+                          format: date
+                          example: '2023-01-01'
+                        status:
+                          type: string
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          example: false
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - facilities
+      summary: 施設の登録
+      operationId: addFacility
+      requestBody:
+        description: 施設の登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: サンプルショッピングセンター
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字とハイフン12文字以内  
+                    ハイフンは先頭不可、連続使用不可  
+                    契約ID毎にユニーク制約
+                postcode:
+                  type: string
+                  example: '1234567'
+                  minLength: 7
+                  maxLength: 7
+                  description: ハイフンなしの半角数字
+                address:
+                  type: string
+                  example: 岡山県岡山市
+                  maxLength: 128
+                phoneNumber:
+                  type: string
+                  example: 09012345678
+                  maxLength: 11
+                  description: ハイフンなしの半角数字
+                faxNumber:
+                  type: string
+                  example: 09012345678
+                  maxLength: 11
+                  description: ハイフンなしの半角数字
+                contactPerson:
+                  type: string
+                  example: 担当太郎
+                  maxLength: 128
+                startDate:
+                  type: string
+                  format: date
+                  example: '2023-01-01'
+                  description: 利用開始日
+                note:
+                  type: string
+                  example: 備考
+                  maxLength: 2000
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilityId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/facilities/{id}':
+    put:
+      tags:
+        - facilities
+      summary: 施設の更新
+      operationId: updateFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 施設の更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: サンプルショッピングセンター
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字とハイフン12文字以内  
+                    ハイフンは先頭不可、連続使用不可  
+                    契約ID毎にユニーク制約
+                postcode:
+                  type: string
+                  example: '1234567'
+                  minLength: 7
+                  maxLength: 7
+                  description: ハイフンなしの半角数字
+                address:
+                  type: string
+                  example: 岡山県岡山市
+                  maxLength: 128
+                phoneNumber:
+                  type: string
+                  example: 09012345678
+                  maxLength: 11
+                  description: ハイフンなしの半角数字
+                faxNumber:
+                  type: string
+                  example: 09012345678
+                  maxLength: 11
+                  description: ハイフンなしの半角数字
+                contactPerson:
+                  type: string
+                  example: 担当太郎
+                  maxLength: 128
+                startDate:
+                  type: string
+                  format: date
+                  example: '2023-01-01'
+                  description: 利用開始日
+                note:
+                  type: string
+                  example: 備考
+                  maxLength: 2000
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilityId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    get:
+      tags:
+        - facilities
+      summary: 施設の詳細取得
+      operationId: showFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: サンプルショッピングセンター
+                  code:
+                    type: string
+                    example: '0001'
+                  postcode:
+                    type: string
+                    example: '1234567'
+                  address:
+                    type: string
+                    example: 岡山県岡山市
+                  phoneNumber:
+                    type: string
+                    example: 09012345678
+                  faxNumber:
+                    type: string
+                    example: 09012345678
+                  contactPerson:
+                    type: string
+                    example: 担当太郎
+                  startDate:
+                    type: string
+                    format: date
+                    example: '2023-01-01'
+                  note:
+                    type: string
+                    example: 備考
+                  status:
+                    type: string
+                    enum:
+                      - active
+                      - inactive
+                  deactivateReason:
+                    type: string
+                    example: 利用停止
+                    description: 状態が無効の場合は必須項目
+                  locked:
+                    type: boolean
+                    example: false
+                  lockReason:
+                    type: string
+                    example: 障害の為、一時利用停止
+                    description: ロック状態がロック中の場合は必須項目
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    delete:
+      tags:
+        - facilities
+      summary: 施設の削除
+      operationId: deleteFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/lock':
+    patch:
+      tags:
+        - facilities
+      summary: 施設のロック
+      operationId: lockFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/lockReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilityId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/unlock':
+    patch:
+      tags:
+        - facilities
+      summary: 施設のロック解除
+      operationId: unlockFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilityId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/activate':
+    patch:
+      tags:
+        - facilities
+      summary: 施設の有効化
+      operationId: activateFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilityId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/deactivate':
+    patch:
+      tags:
+        - facilities
+      summary: 施設の無効化
+      operationId: deactivateFacility
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/deactivateReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  facilityId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/facilities/{id}/shops':
+    get:
+      tags:
+        - shops
+      summary: ショップの一覧取得
+      operationId: listFacilityShops
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keywords
+          description: ショップ名・ショップコード
+          in: query
+          schema:
+            type: string
+        - name: status
+          description: 営業状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - open
+              - close
+              - all
+            default: open
+        - name: floorId
+          description: フロアID
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: largeIndustryId
+          description: 大業種ID
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - name: page
+          description: ページ番号
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          description: 1ページあたりの件数
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 20
+              - 50
+              - 100
+            default: 20
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shops:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: サンプルショップA
+                        code:
+                          type: string
+                          example: '0001'
+                        openDate:
+                          type: string
+                          example: '2023-01-01'
+                          format: date
+                        closeDate:
+                          type: string
+                          example: '2023-12-31'
+                          format: date
+                        status:
+                          type: string
+                          example: open
+                        floor:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 1F
+                            code:
+                              type: string
+                              example: '0001'
+                        largeIndustry:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 飲食
+                            code:
+                              type: string
+                              example: '0001'
+                  total_count:
+                    type: integer
+                    format: int64
+                    example: 11
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - shops
+      summary: ショップの登録
+      operationId: addFacilityShops
+      parameters:
+        - name: id
+          in: path
+          description: 施設ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: ショップの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - openDate
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: サンプルショップA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字12文字以内  
+                    施設内ユニーク制約
+                companyId:
+                  type: integer
+                  example: 1
+                manager:
+                  type: string
+                  example: サンプルマネージャー太郎
+                  maxLength: 128
+                contractStartDate:
+                  type: string
+                  example: '2023-01-01'
+                  format: date
+                contractEndDate:
+                  type: string
+                  example: '2023-12-31'
+                  format: date
+                openDate:
+                  type: string
+                  example: '2023-01-01'
+                  format: date
+                closeDate:
+                  type: string
+                  example: '2023-12-31'
+                  format: date
+                floorId:
+                  type: integer
+                  example: 1
+                areaId:
+                  type: integer
+                  example: 1
+                largeIndustryId:
+                  type: integer
+                  example: 1
+                mediumIndustryId:
+                  type: integer
+                  example: 1
+                smallIndustryId:
+                  type: integer
+                  example: 1
+                managementDivisionValues:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      valueId:
+                        type: integer
+                        example: 1
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shopId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/shops/{id}':
+    delete:
+      tags:
+        - shops
+      summary: ショップの削除
+      operationId: deleteFacilityShop
+      parameters:
+        - name: id
+          in: path
+          description: ショップID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+    put:
+      tags:
+        - shops
+      summary: ショップの更新
+      operationId: updateFacilityShop
+      parameters:
+        - name: id
+          in: path
+          description: ショップID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: ショップの更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+                - openDate
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: サンプルショップA
+                  maxLength: 128
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字12文字以内  
+                    施設内ユニーク制約
+                companyId:
+                  type: integer
+                  example: 1
+                manager:
+                  type: string
+                  example: サンプルマネージャー太郎
+                  maxLength: 128
+                contractStartDate:
+                  type: string
+                  example: '2023-01-01'
+                  format: date
+                contractEndDate:
+                  type: string
+                  example: '2023-12-31'
+                  format: date
+                openDate:
+                  type: string
+                  example: '2023-01-01'
+                  format: date
+                closeDate:
+                  type: string
+                  example: '2023-12-31'
+                  format: date
+                floorId:
+                  type: integer
+                  example: 1
+                areaId:
+                  type: integer
+                  example: 1
+                largeIndustryId:
+                  type: integer
+                  example: 1
+                mediumIndustryId:
+                  type: integer
+                  example: 1
+                smallIndustryId:
+                  type: integer
+                  example: 1
+                managementDivisionValues:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      valueId:
+                        type: integer
+                        example: 1
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shopId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    get:
+      tags:
+        - shops
+      summary: ショップの詳細取得
+      operationId: showFacilityShop
+      parameters:
+        - name: id
+          in: path
+          description: ショップID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: サンプルショップA
+                  code:
+                    type: string
+                    example: '0001'
+                  company:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: サンプル会社A
+                      code:
+                        type: string
+                        example: '0001'
+                  manager:
+                    type: string
+                    example: サンプルマネージャー太郎
+                  contractStartDate:
+                    type: string
+                    example: '2023-01-01'
+                  contractEndDate:
+                    type: string
+                    example: '2023-12-31'
+                  openDate:
+                    type: string
+                    example: '2023-01-01'
+                  closeDate:
+                    type: string
+                    example: '2023-12-31'
+                  floor:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 1F
+                      code:
+                        type: string
+                        example: '0001'
+                  area:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: サンプルエリアA
+                      code:
+                        type: string
+                        example: '0001'
+                  largeIndustry:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 飲食
+                      code:
+                        type: string
+                        example: '0001'
+                  mediumIndustry:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: ファストフード
+                      code:
+                        type: string
+                        example: '0001'
+                  smallIndustry:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: ハンバーガー
+                      code:
+                        type: string
+                        example: '0001'
+                  managementDivisionValues:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 管理区分A
+                        value:
+                          type: string
+                          example: '0001'
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  /user/products:
+    get:
+      tags:
+        - user/products
+      summary: 契約製品一覧取得
+      operationId: listProducts
+      parameters:
+        - name: productIds
+          description: 製品ID（複数指定可）
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: onlyAvailable
+          description: 現在契約中の（利用可能な）製品のみを取得するか
+          in: query
+          schema:
+            type: boolean
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - product
+              - startDate
+              - endDate
+            default: product
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: 製品ID
+                        name:
+                          type: string
+                          description: 製品名
+                        startDate:
+                          type: string
+                          format: date
+                          description: 契約開始日
+                        endDate:
+                          type: string
+                          format: date
+                          description: 契約終了日
+                        maxNumberOfUsers:
+                          type: integer
+                          format: int64
+                          description: 最大ユーザー数
+                        currentNumberOfUsers:
+                          type: integer
+                          format: int64
+                          description: 現在のユーザー数
+                        locked:
+                          type: boolean
+                          description: ロックされているか
+                example:
+                  products:
+                    - id: 1
+                      name: コミュニケーション
+                      startDate: '2023-04-01'
+                      endDate: '2024-03-31'
+                      maxNumberOfUsers: 100
+                      currentNumberOfUsers: 40
+                      locked: false
+                    - id: 2
+                      name: 分析
+                      startDate: '2023-04-01'
+                      endDate: '2024-03-31'
+                      maxNumberOfUsers: 30
+                      currentNumberOfUsers: 10
+                      locked: true
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/products/{id}':
+    get:
+      tags:
+        - user/products
+      summary: 契約製品の詳細取得
+      operationId: showProduct
+      parameters:
+        - name: id
+          description: 製品ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 製品
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: 製品ID
+                    example: 1
+                  name:
+                    type: string
+                    description: 製品名
+                    example: コミュニケーション
+                  startDate:
+                    type: string
+                    format: date
+                    description: 契約開始日
+                    example: '2023-04-01'
+                  endDate:
+                    type: string
+                    format: date
+                    description: 契約終了日
+                    example: '2024-03-31'
+                  maxNumberOfUsers:
+                    type: integer
+                    format: int64
+                    description: 最大ユーザー数
+                    example: 100
+                  currentNumberOfUsers:
+                    type: integer
+                    format: int64
+                    description: 現在のユーザー数
+                    example: 80
+                  locked:
+                    type: boolean
+                    description: ロックされているか
+                    example: false
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/products/{id}/users':
+    post:
+      tags:
+        - productUsers
+      summary: 製品ユーザーの登録
+      operationId: addProductUsers
+      parameters:
+        - name: id
+          description: 製品ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - userIds
+              type: object
+              properties:
+                userIds:
+                  description: ユーザーID
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                  example:
+                    - 1
+                    - 2
+                    - 3
+      responses:
+        '201':
+          description: 正常
+          content: {}
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - productUsers
+      summary: 製品ユーザーの登録解除
+      operationId: deleteProductUsers
+      parameters:
+        - name: id
+          description: 製品ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - userIds
+              type: object
+              properties:
+                userIds:
+                  description: ユーザーID
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                  example:
+                    - 1
+                    - 2
+                    - 3
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/products/{id}/developer_users':
+    get:
+      tags:
+        - productUsers
+      summary: 製品に紐づくユーザーの一覧取得（デベロッパー企業）
+      operationId: listProductUsers_developer
+      parameters:
+        - name: id
+          description: 製品ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keywords
+          description: |
+            検索キーワード。  
+            ユーザー名、ユーザーコードを対象とする。  
+            制御文字は弾く。
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: userGroupId
+          description: ユーザーグループID
+          in: query
+          schema:
+            type: integer
+            format: int64
+          example: 1
+        - name: facilityId
+          description: 施設ID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: mode
+          description: |
+            検索モード。  
+            製品に紐づくユーザーのみを取得する場合はproductUsersOnlyを指定する。  
+            製品に紐づかないユーザーのみを取得する場合はnonProductUsersOnlyを指定する。
+          in: query
+          schema:
+            type: string
+            enum:
+              - productUsersOnly
+              - nonProductUsersOnly
+            default: productUsersOnly
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - name: page
+          description: ページ番号
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          description: 1ページあたりの表示件数
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 20
+              - 50
+              - 100
+            default: 20
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    description: ユーザー一覧
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: ユーザーID
+                        name:
+                          type: string
+                          description: ユーザー名
+                        code:
+                          type: string
+                          description: ユーザーコード
+                        facilities:
+                          type: array
+                          description: 所属施設
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                description: 施設ID
+                              name:
+                                type: string
+                                description: 施設名称
+                              code:
+                                type: string
+                                description: 施設コード
+                        status:
+                          type: string
+                          description: 状態
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          description: ロック状態
+                  totalCount:
+                    type: integer
+                    format: int64
+                    description: ユーザー総数
+                example:
+                  users:
+                    - id: 1
+                      name: user01
+                      code: '0001'
+                      facilities:
+                        - id: 1
+                          name: 施設A
+                          code: '0001'
+                        - id: 2
+                          name: 施設B
+                          code: '0002'
+                      status: active
+                      locked: false
+                    - id: 2
+                      name: user02
+                      code: '0002'
+                      facilities:
+                        - id: 1
+                          name: 施設A
+                          code: '0001'
+                      status: inactive
+                      locked: true
+                  totalCount: 2
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/products/{id}/disaster_prevention_center_users':
+    get:
+      tags:
+        - productUsers
+      summary: 製品に紐づくユーザーの一覧取得（防災センター）
+      operationId: listProductUsers_disasterPreventionCenter
+      parameters:
+        - name: id
+          description: 製品ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keywords
+          description: |
+            検索キーワード。  
+            ユーザー名、ユーザーコードを対象とする。  
+            制御文字は弾く。
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: userGroupId
+          description: ユーザーグループID
+          in: query
+          schema:
+            type: integer
+            format: int64
+          example: 1
+        - name: facilityId
+          description: 施設ID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: mode
+          description: |
+            検索モード。  
+            製品に紐づくユーザーのみを取得する場合はproductUsersOnlyを指定する。  
+            製品に紐づかないユーザーのみを取得する場合はnonProductUsersOnlyを指定する。
+          in: query
+          schema:
+            type: string
+            enum:
+              - productUsersOnly
+              - nonProductUsersOnly
+            default: productUsersOnly
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - name: page
+          description: ページ番号
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          description: 1ページあたりの表示件数
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 20
+              - 50
+              - 100
+            default: 20
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    description: ユーザー一覧
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: ユーザーID
+                        name:
+                          type: string
+                          description: ユーザー名
+                        code:
+                          type: string
+                          description: ユーザーコード
+                        facilities:
+                          type: array
+                          description: 所属施設
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                description: 施設ID
+                              name:
+                                type: string
+                                description: 施設名称
+                              code:
+                                type: string
+                                description: 施設コード
+                        status:
+                          type: string
+                          description: 状態
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          description: ロック状態
+                  totalCount:
+                    type: integer
+                    format: int64
+                    description: ユーザー総数
+                example:
+                  users:
+                    - id: 1
+                      name: user01
+                      code: '0001'
+                      facilities:
+                        - id: 1
+                          name: 施設A
+                          code: '0001'
+                        - id: 2
+                          name: 施設B
+                          code: '0002'
+                      status: active
+                      locked: false
+                    - id: 2
+                      name: user02
+                      code: '0002'
+                      facilities:
+                        - id: 1
+                          name: 施設A
+                          code: '0001'
+                      status: inactive
+                      locked: true
+                  totalCount: 2
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/products/{id}/shop_users':
+    get:
+      tags:
+        - productUsers
+      summary: 製品に紐づくユーザーの一覧取得（ショップ）
+      operationId: listProductUsers_shop
+      parameters:
+        - name: id
+          description: 製品ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: keywords
+          description: |
+            検索キーワード。  
+            ユーザー名、ユーザーコード、ショップ名、ショップコードを対象とする。  
+            制御文字は弾く。
+          in: query
+          schema:
+            type: string
+            maxLength: 128
+        - name: userGroupId
+          description: ユーザーグループID
+          in: query
+          schema:
+            type: integer
+            format: int64
+          example: 1
+        - name: facilityId
+          description: 施設ID
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: shopId
+          description: ショップID
+          in: query
+          schema:
+            type: integer
+            format: int64
+          example: 1
+        - name: status
+          description: 状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - active
+              - inactive
+            default: active
+        - name: lock
+          description: ロック状態
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unlocked
+              - locked
+            default: unlocked
+        - name: mode
+          description: |
+            検索モード。  
+            製品に紐づくユーザーのみを取得する場合はproductUsersOnlyを指定する。  
+            製品に紐づかないユーザーのみを取得する場合はnonProductUsersOnlyを指定する。
+          in: query
+          schema:
+            type: string
+            enum:
+              - productUsersOnly
+              - nonProductUsersOnly
+            default: productUsersOnly
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+            default: code
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+        - name: page
+          description: ページ番号
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          description: 1ページあたりの表示件数
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 20
+              - 50
+              - 100
+            default: 20
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    description: ユーザー一覧
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: ユーザーID
+                        name:
+                          type: string
+                          description: ユーザー名
+                        code:
+                          type: string
+                          description: ユーザーコード
+                        facility:
+                          type: object
+                          description: 所属施設
+                          properties:
+                            id:
+                              type: integer
+                              description: 施設ID
+                            name:
+                              type: string
+                              description: 施設名称
+                            code:
+                              type: string
+                              description: 施設コード
+                        shop:
+                          type: object
+                          description: 所属ショップ
+                          properties:
+                            id:
+                              type: integer
+                              description: ショップID
+                            name:
+                              type: string
+                              description: ショップ名称
+                            code:
+                              type: string
+                              description: ショップコード
+                        status:
+                          type: string
+                          description: 状態
+                          enum:
+                            - active
+                            - inactive
+                        locked:
+                          type: boolean
+                          description: ロック状態
+                  totalCount:
+                    type: integer
+                    format: int64
+                    description: ユーザー総数
+                example:
+                  users:
+                    - id: 1
+                      name: user01
+                      code: '0001'
+                      facility:
+                        id: 1
+                        name: 施設A
+                        code: '0001'
+                      shop:
+                        id: 1
+                        name: ショップA
+                        code: '0001'
+                      status: active
+                      locked: false
+                    - id: 2
+                      name: user02
+                      code: '0002'
+                      facility:
+                        id: 2
+                        name: 施設B
+                        code: '0002'
+                      shop:
+                        id: 2
+                        name: ショップB
+                        code: '0002'
+                      status: inactive
+                      locked: true
+                  totalCount: 2
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  /user/management_divisions:
+    get:
+      tags:
+        - managementDivisions
+      summary: 管理区分一覧取得
+      operationId: listManagementDivisions
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: 管理区分ID
+                        name:
+                          type: string
+                          description: 管理区分名
+                        code:
+                          type: string
+                          description: 管理区分コード
+                        status:
+                          type: string
+                          description: 状態
+                          enum:
+                            - active
+                            - inactive
+                        deactivateReason:
+                          type: string
+                          example: 利用停止
+                          description: 状態が無効の場合は必須項目
+                example:
+                  managementDivisions:
+                    - id: 1
+                      name: 売場面積
+                      code: '0001'
+                      status: active
+                    - id: 2
+                      name: 契約区分
+                      code: '0002'
+                      status: active
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - managementDivisions
+      summary: 管理区分の登録
+      operationId: addManagementDivision
+      requestBody:
+        description: 管理区分の登録データ
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 管理区分名
+                  maxLength: 128
+                  example: 売場面積
+                code:
+                  type: string
+                  description: |
+                    管理区分コード  
+                    半角英数字のみ  
+                    契約会社ごとにユニーク制約
+                  maxLength: 12
+                  example: '0001'
+              required:
+                - name
+                - code
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionId:
+                    type: integer
+                    format: int64
+                    description: 管理区分ID
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/management_divisions/{id}':
+    get:
+      tags:
+        - managementDivisions
+      summary: 管理区分の詳細取得
+      operationId: getManagementDivision
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: 管理区分ID
+                  name:
+                    type: string
+                    description: 管理区分名
+                  code:
+                    type: string
+                    description: 管理区分コード
+                  status:
+                    type: string
+                    description: 状態
+                    enum:
+                      - active
+                      - inactive
+                  deactivateReason:
+                    type: string
+                    example: 利用停止
+                    description: 状態が無効の場合は必須項目
+                  values:
+                    type: array
+                    description: 管理区分値一覧
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: 管理区分値ID
+                        name:
+                          type: string
+                          description: 表示名
+                        value:
+                          type: string
+                          description: 管理区分値
+                        status:
+                          type: string
+                          description: 状態
+                          enum:
+                            - active
+                            - inactive
+                        deactivateReason:
+                          type: string
+                          example: 利用停止
+                          description: 状態が無効の場合は必須項目
+                        displayOrder:
+                          type: integer
+                          description: 表示順
+                example:
+                  id: 1
+                  name: 売場面積
+                  code: '0001'
+                  status: active
+                  values:
+                    - id: 1
+                      name: 100㎡未満
+                      value: '0001'
+                      status: active
+                      displayOrder: 1
+                    - id: 2
+                      name: 100㎡以上300㎡未満
+                      value: '0002'
+                      status: active
+                      displayOrder: 2
+                    - id: 3
+                      name: 300㎡以上500㎡未満
+                      value: '0003'
+                      status: active
+                      displayOrder: 3
+                    - id: 4
+                      name: 500㎡以上1000㎡未満
+                      value: '0004'
+                      status: active
+                      displayOrder: 4
+                    - id: 5
+                      name: 1000㎡以上2000㎡未満
+                      value: '0005'
+                      status: active
+                      displayOrder: 5
+                    - id: 6
+                      name: 2000㎡以上
+                      value: '0006'
+                      status: active
+                      displayOrder: 6
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    put:
+      tags:
+        - managementDivisions
+      summary: 管理区分の更新
+      operationId: updateManagementDivision
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 管理区分の更新データ
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 管理区分名
+                  maxLength: 128
+                  example: 売場面積
+                code:
+                  type: string
+                  description: |
+                    管理区分コード  
+                    半角英数字のみ  
+                    契約会社ごとにユニーク制約
+                  maxLength: 12
+                  example: '0001'
+              required:
+                - name
+                - code
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionId:
+                    type: integer
+                    format: int64
+                    description: 管理区分ID
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/management_divisions/{id}/activate':
+    patch:
+      tags:
+        - managementDivisions
+      summary: 管理区分の有効化
+      operationId: activateManagementDivision
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionId:
+                    type: integer
+                    format: int64
+                    description: 管理区分ID
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/management_divisions/{id}/deactivate':
+    patch:
+      tags:
+        - managementDivisions
+      summary: 管理区分の無効化
+      operationId: deactivateManagementDivision
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/deactivateReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionId:
+                    type: integer
+                    format: int64
+                    description: 管理区分ID
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/management_divisions/{id}/values':
+    post:
+      tags:
+        - managementDivisions
+      summary: 管理区分値の登録
+      operationId: addManagementDivisionValue
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 管理区分値の登録データ
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 表示名
+                  maxLength: 128
+                  example: 100㎡未満
+                value:
+                  type: string
+                  description: |
+                    管理区分値  
+                    半角英数字のみ  
+                    管理区分ごとにユニーク制約
+                  maxLength: 12
+                  example: '0001'
+              required:
+                - name
+                - value
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionValueId:
+                    type: integer
+                    format: int64
+                    description: 管理区分値ID
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/user/management_divisions/{id}/values/reorder':
+    put:
+      tags:
+        - managementDivisions
+      summary: 管理区分値の並び替え
+      operationId: reorderManagementDivisionValues
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/orderIds'
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '422':
+          description: 該当データなし
+          content: {}
+  '/user/management_division_values/{id}':
+    put:
+      tags:
+        - managementDivisions
+      summary: 管理区分値の更新
+      operationId: updateManagementDivisionValue
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分値ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 管理区分値の更新データ
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 表示名
+                  maxLength: 128
+                  example: 100㎡未満
+                value:
+                  type: string
+                  description: |
+                    管理区分値  
+                    半角英数字のみ  
+                    管理区分ごとにユニーク制約
+                  maxLength: 12
+                  example: '0001'
+              required:
+                - name
+                - value
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionValueId:
+                    type: integer
+                    format: int64
+                    description: 管理区分ID
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/management_division_values/{id}/activate':
+    patch:
+      tags:
+        - managementDivisions
+      summary: 管理区分値の有効化
+      operationId: activateManagementDivisionValue
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分値ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionValueId:
+                    type: integer
+                    format: int64
+                    description: 管理区分値ID
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/user/management_division_values/{id}/deactivate':
+    patch:
+      tags:
+        - managementDivisions
+      summary: 管理区分値の無効化
+      operationId: deactivateManagementDivisionValue
+      parameters:
+        - name: id
+          in: path
+          description: 管理区分値ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/deactivateReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  managementDivisionValueId:
+                    type: integer
+                    format: int64
+                    description: 管理区分値ID
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  /user/logo:
+    post:
+      tags:
+        - logo
+      summary: ロゴの登録
+      operationId: addLogo
+      requestBody:
+        description: ロゴの登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - logoImageId
+              type: object
+              properties:
+                logoImageId:
+                  type: integer
+                  example: 1
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content: {}
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - logo
+      summary: ロゴの削除
+      operationId: deleteLogo
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  /admin/products:
+    get:
+      tags:
+        - products
+      summary: 製品の一覧取得
+      operationId: listProducts
+      parameters:
+        - name: keywords
+          description: 製品名
+          in: query
+          schema:
+            type: string
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+              - displayOrder
+              - locked
+            default: displayOrder
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: コミュニケーション
+                        code:
+                          type: string
+                          example: communication
+                        displayOrder:
+                          type: integer
+                          example: 1
+                        locked:
+                          type: boolean
+                          example: false
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - products
+      summary: 製品の登録
+      operationId: addProduct
+      requestBody:
+        description: 製品の登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: コミュニケーション
+                  maxLength: 128
+                code:
+                  type: string
+                  example: communication
+                  maxLength: 32
+                  description: |
+                    半角英数字とハイフン  
+                    製品コード内でユニーク制約
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  /admin/products/reorder:
+    put:
+      tags:
+        - products
+      summary: 製品の並び替え
+      operationId: reorderProducts
+      requestBody:
+        $ref: '#/components/requestBodies/orderIds'
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '422':
+          description: 該当データなし
+          content: {}
+  '/admin/products/{id}':
+    get:
+      tags:
+        - products
+      summary: 製品の詳細取得
+      operationId: showProducts
+      parameters:
+        - name: id
+          in: path
+          description: 製品ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: コミュニケーション
+                  code:
+                    type: string
+                    example: communication
+                  displayOrder:
+                    type: integer
+                    example: 1
+                  locked:
+                    type: boolean
+                    example: true
+                  lockReason:
+                    type: string
+                    example: 障害の為、一時利用停止
+                    description: ロック状態がロック中の場合は必須項目
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    put:
+      tags:
+        - products
+      summary: 製品の更新
+      operationId: updateProducts
+      parameters:
+        - name: id
+          in: path
+          description: 製品ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 製品の更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: コミュニケーション
+                  maxLength: 128
+                code:
+                  type: string
+                  example: communication
+                  maxLength: 32
+                  description: |
+                    半角英数字とハイフン  
+                    製品コード内でユニーク制約
+        required: true
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/products/{id}/lock':
+    patch:
+      tags:
+        - products
+      summary: 製品のロック
+      operationId: lockProduct
+      parameters:
+        - name: id
+          in: path
+          description: 製品ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/lockReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/products/{id}/unlock':
+    patch:
+      tags:
+        - products
+      summary: 製品のロック解除
+      operationId: unlockProduct
+      parameters:
+        - name: id
+          in: path
+          description: 製品ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  /admin/client_companies:
+    get:
+      tags:
+        - clientCompanies
+      summary: 契約会社の一覧取得
+      operationId: listClientCompanies
+      parameters:
+        - name: keywords
+          description: 会社名・会社コード
+          in: query
+          schema:
+            type: string
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - name
+              - code
+              - createdDate
+              - locked
+            default: createdDate
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientCompanies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 会社A
+                        code:
+                          type: string
+                          example: '0001'
+                        createdDate:
+                          type: string
+                          format: date
+                        locked:
+                          type: boolean
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - clientCompanies
+      summary: 契約会社の登録
+      operationId: addClientCompany
+      requestBody:
+        description: 契約会社の登録データ
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_company:
+                  required:
+                    - name
+                    - code
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: 会社A
+                      maxLength: 128
+                      description: 制御文字が来たらエラーにする
+                    code:
+                      type: string
+                      example: '0001'
+                      maxLength: 12
+                      description: |
+                        半角英数字とハイフン12文字以内  
+                        ハイフンは先頭不可、連続使用不可  
+                        ユニーク制約  
+                        サブドメインの予約語(www, ftp, smtp, pop, mail)禁止
+                    postcode:
+                      type: string
+                      example: '7010165'
+                      minLength: 7
+                      maxLength: 7
+                      description: ハイフンなしの半角数字
+                    address:
+                      type: string
+                      example: 岡山県岡山市北区大内田
+                      maxLength: 128
+                    phoneNumber:
+                      type: string
+                      example: 0862926136
+                      maxLength: 11
+                      description: ハイフンなしの半角数字
+                    faxNumber:
+                      type: string
+                      example: 0862926136
+                      maxLength: 11
+                      description: ハイフンなしの半角数字
+                    contactPerson:
+                      type: string
+                      example: 田中太郎
+                      maxLength: 128
+                    note:
+                      type: string
+                      example: 備考
+                      maxLength: 2000
+                user:
+                  required:
+                    - name
+                    - code
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: ユーザー1
+                      maxLength: 128
+                    code:
+                      type: string
+                      example: '0001'
+                      maxLength: 12
+                      description: 半角英数字
+                    emails:
+                      type: array
+                      items:
+                        type: string
+                        example: test@example.com
+                      description: RFC準拠のメールアドレス
+        required: true
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientCompanyId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/admin/client_companies/{id}':
+    put:
+      tags:
+        - clientCompanies
+      summary: 契約会社の更新
+      operationId: updateClientCompany
+      parameters:
+        - name: id
+          in: path
+          description: 契約会社ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 契約会社の更新データ
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - code
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 会社A
+                  maxLength: 128
+                  description: 制御文字が来たらエラーにする
+                code:
+                  type: string
+                  example: '0001'
+                  maxLength: 12
+                  description: |
+                    半角英数字とハイフン12文字以内  
+                    ハイフンは先頭不可、連続使用不可  
+                    ユニーク制約  
+                    サブドメインの予約語(www, ftp, smtp, pop, mail)禁止
+                postcode:
+                  type: string
+                  example: '7010165'
+                  minLength: 7
+                  maxLength: 7
+                  description: ハイフンなしの半角数字
+                address:
+                  type: string
+                  example: 岡山県岡山市北区大内田
+                  maxLength: 128
+                phoneNumber:
+                  type: string
+                  example: 0862926136
+                  maxLength: 11
+                  description: ハイフンなしの半角数字
+                faxNumber:
+                  type: string
+                  example: 0862926136
+                  maxLength: 11
+                  description: ハイフンなしの半角数字
+                contactPerson:
+                  type: string
+                  example: 田中太郎
+                  maxLength: 128
+                note:
+                  type: string
+                  example: 備考
+                  maxLength: 2000
+        required: true
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientCompanyId:
+                    type: integer
+                    example: 1
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    delete:
+      tags:
+        - clientCompanies
+      summary: 契約会社の削除
+      operationId: deleteClientCompany
+      parameters:
+        - name: id
+          in: path
+          description: 契約会社ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+    get:
+      tags:
+        - clientCompanies
+      summary: 契約会社の詳細取得
+      operationId: showClientCompany
+      parameters:
+        - name: id
+          in: path
+          description: 契約会社ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 会社A
+                  code:
+                    type: string
+                    example: '0001'
+                  postcode:
+                    type: string
+                    example: '7010165'
+                  address:
+                    type: string
+                    example: 岡山県岡山市北区大内田
+                  phoneNumber:
+                    type: string
+                    example: 0862926136
+                  faxNumber:
+                    type: string
+                    example: 0862926136
+                  contactPerson:
+                    type: string
+                    example: 田中太郎
+                  note:
+                    type: string
+                    example: 備考
+                  createdDate:
+                    type: string
+                    format: date
+                  locked:
+                    type: boolean
+                  lockReason:
+                    type: string
+                    example: 障害の為、一時利用停止
+                    description: ロック状態がロック中の場合は必須項目
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/client_companies/{id}/lock':
+    patch:
+      tags:
+        - clientCompanies
+      summary: 契約会社のロック
+      operationId: lockClientCompany
+      parameters:
+        - name: id
+          in: path
+          description: 契約会社ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/lockReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientCompanyId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/client_companies/{id}/unlock':
+    patch:
+      tags:
+        - clientCompanies
+      summary: 契約会社のロック解除
+      operationId: unlockClientCompany
+      parameters:
+        - name: id
+          in: path
+          description: 契約会社ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clientCompanyId:
+                    type: integer
+                    example: 1
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/client_companies/{id}/login':
+    post:
+      tags:
+        - clientCompanies
+      summary: 契約会社のメンテナンスログイン
+      operationId: loginClientCompany
+      parameters:
+        - name: id
+          in: path
+          description: 契約会社ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/client_companies/{id}/product_contracts':
+    get:
+      tags:
+        - productContracts
+      summary: 製品契約の一覧取得
+      operationId: listProductContracts
+      parameters:
+        - name: id
+          description: 契約会社ID
+          required: true
+          in: path
+          schema:
+            type: integer
+            format: int64
+        - name: productIds
+          description: 製品ID（複数指定可）
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: onlyAvailable
+          description: 現在契約中の（利用可能な）製品のみを取得するか
+          in: query
+          schema:
+            type: boolean
+        - name: sort
+          description: 並び順
+          in: query
+          schema:
+            type: string
+            enum:
+              - product
+              - startDate
+              - endDate
+            default: product
+        - name: order
+          description: 昇順・降順
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productContracts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          description: 製品契約ID
+                        product:
+                          type: object
+                          description: 製品
+                          properties:
+                            id:
+                              type: integer
+                              format: int64
+                              description: 製品ID
+                            name:
+                              type: string
+                              description: 製品名
+                        startDate:
+                          type: string
+                          format: date
+                          description: 契約開始日
+                        endDate:
+                          type: string
+                          format: date
+                          description: 契約終了日
+                        maxNumberOfUsers:
+                          type: integer
+                          format: int64
+                          description: 最大ユーザー数
+                        currentNumberOfUsers:
+                          type: integer
+                          format: int64
+                          description: 現在のユーザー数
+                        totalMonthlyPrice:
+                          type: integer
+                          format: int64
+                          description: 合計月額料金（税抜）
+                        locked:
+                          type: boolean
+                          description: ロック
+                example:
+                  productContracts:
+                    - id: 1
+                      product:
+                        id: 2
+                        name: コミュニケーション
+                      startDate: '2023-04-01'
+                      endDate: '2024-03-31'
+                      maxNumberOfUsers: 100
+                      currentNumberOfUsers: 75
+                      totalMonthlyPrice: 120000
+                      locked: false
+                    - id: 2
+                      product:
+                        id: 5
+                        name: 分析
+                      startDate: '2023-04-01'
+                      endDate: '2024-03-31'
+                      maxNumberOfUsers: 20
+                      currentNumberOfUsers: 12
+                      totalMonthlyPrice: 50000
+                      locked: true
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+    post:
+      tags:
+        - productContracts
+      summary: 製品契約の登録
+      operationId: addProductContract
+      parameters:
+        - name: id
+          schema:
+            type: integer
+            format: int64
+          description: 契約会社ID
+          required: true
+          in: path
+      requestBody:
+        description: 製品契約の登録データ
+        content:
+          application/json:
+            schema:
+              required:
+                - productId
+                - startDate
+                - endDate
+                - maxNumberOfUsers
+                - initialCost
+                - basePrice
+                - pricePerUser
+              type: object
+              properties:
+                productId:
+                  type: integer
+                  format: int64
+                  description: 製品ID
+                  example: 2
+                startDate:
+                  type: string
+                  format: date
+                  description: 契約開始日。契約開始日 ≦ 契約終了日 を満たす必要がある。
+                  example: '2023-04-01'
+                endDate:
+                  type: string
+                  format: date
+                  description: 契約終了日。契約開始日 ≦ 契約終了日 を満たす必要がある。
+                  example: '2024-03-31'
+                maxNumberOfUsers:
+                  type: integer
+                  format: int64
+                  description: 最大ユーザー数
+                  minimum: 0
+                  example: 120
+                initialCost:
+                  type: integer
+                  format: int64
+                  description: 初期費用（税抜）
+                  minimum: 0
+                  example: 30000
+                basePrice:
+                  type: integer
+                  format: int64
+                  description: 基本料金（税抜）
+                  minimum: 0
+                  example: 10000
+                pricePerUser:
+                  type: integer
+                  format: int64
+                  description: 1ユーザーあたりの料金（税抜）
+                  minimum: 0
+                  example: 100
+      responses:
+        '201':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productContractId:
+                    type: integer
+                    format: int64
+                    description: 製品契約ID
+                    example: 3
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+      x-codegen-request-body-name: body
+  '/admin/product_contracts/{id}':
+    get:
+      tags:
+        - productContracts
+      summary: 製品契約の詳細取得
+      operationId: showProductContract
+      parameters:
+        - name: id
+          description: 製品契約ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: 製品契約ID
+                    example: 3
+                  product:
+                    type: object
+                    description: 製品
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: 製品ID
+                        example: 1
+                      name:
+                        type: string
+                        description: 製品名
+                        example: コミュニケーション
+                  startDate:
+                    type: string
+                    format: date
+                    description: 契約開始日
+                    example: '2023-04-01'
+                  endDate:
+                    type: string
+                    format: date
+                    description: 契約終了日
+                    example: '2024-03-31'
+                  maxNumberOfUsers:
+                    type: integer
+                    format: int64
+                    description: 最大ユーザー数
+                    example: 100
+                  currentNumberOfUsers:
+                    type: integer
+                    format: int64
+                    description: 現在のユーザー数
+                    example: 80
+                  initialCost:
+                    type: integer
+                    format: int64
+                    description: 初期費用（税抜）
+                    example: 30000
+                  basePrice:
+                    type: integer
+                    format: int64
+                    description: 基本料金（税抜）
+                    example: 10000
+                  pricePerUser:
+                    type: integer
+                    format: int64
+                    description: 1ユーザーあたりの料金（税抜）
+                    example: 100
+                  locked:
+                    type: boolean
+                    description: ロック
+                    example: false
+                  lockReason:
+                    type: string
+                    example: 障害の為、一時利用停止
+                    description: ロック状態がロック中の場合は必須項目
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+    put:
+      tags:
+        - productContracts
+      summary: 製品契約の更新
+      operationId: updateProductContract
+      parameters:
+        - name: id
+          description: 製品契約ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: 製品契約の更新データ
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - startDate
+                - endDate
+                - maxNumberOfUsers
+                - initialCost
+                - basePrice
+                - pricePerUser
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                  description: 契約開始日。契約開始日 ≦ 契約終了日 を満たす必要がある。
+                  example: '2023-04-01'
+                endDate:
+                  type: string
+                  format: date
+                  description: 契約終了日。契約開始日 ≦ 契約終了日 を満たす必要がある。
+                  example: '2024-03-31'
+                maxNumberOfUsers:
+                  type: integer
+                  format: int64
+                  description: 最大ユーザー数
+                  minimum: 0
+                  example: 100
+                initialCost:
+                  type: integer
+                  format: int64
+                  description: 初期費用（税抜）
+                  minimum: 0
+                  example: 30000
+                basePrice:
+                  type: integer
+                  format: int64
+                  description: 基本料金（税抜）
+                  minimum: 0
+                  example: 10000
+                pricePerUser:
+                  type: integer
+                  format: int64
+                  description: 1ユーザーあたりの料金（税抜）
+                  minimum: 0
+                  example: 100
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: 製品契約ID
+                    example: 3
+        '400':
+          description: バリデーションエラー
+          content: {}
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+      x-codegen-request-body-name: body
+  '/admin/product_contracts/{id}/lock':
+    patch:
+      tags:
+        - productContracts
+      summary: 製品契約のロック
+      operationId: lockProductContract
+      parameters:
+        - name: id
+          in: path
+          description: 製品契約ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        $ref: '#/components/requestBodies/lockReason'
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    example: 3
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/admin/product_contracts/{id}/unlock':
+    patch:
+      tags:
+        - productContracts
+      summary: 製品契約のロック解除
+      operationId: unlockProductContract
+      parameters:
+        - name: id
+          in: path
+          description: 製品契約ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    example: 3
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+  '/master/address/{postcode}':
+    get:
+      tags:
+        - master
+      summary: 郵便番号から住所検索
+      operationId: findAddressByPostcode
+      parameters:
+        - name: postcode
+          in: path
+          description: 郵便番号
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  addresses:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address1:
+                          type: string
+                          example: 岡山県
+                        address2:
+                          type: string
+                          example: 岡山市北区
+                        address3:
+                          type: string
+                          example: 大内田
+        '401':
+          description: ログインしていない
+          content: {}
+        '403':
+          description: アクセス権限なし
+          content: {}
+        '404':
+          description: 該当データなし
+          content: {}
+components:
+  parameters:
+    pageParam:
+      name: page
+      description: ページ
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    perPageParam:
+      name: perPage
+      description: 1ページあたりの表示件数
+      in: query
+      schema:
+        type: integer
+        enum:
+          - 20
+          - 50
+          - 100
+        default: 20
+  requestBodies:
+    deactivateReason:
+      description: 無効化理由
+      content:
+        application/json:
+          schema:
+            required:
+              - deactivateReason
+            type: object
+            properties:
+              deactivateReason:
+                type: string
+                example: 利用停止
+                maxLength: 128
+    lockReason:
+      description: ロック理由
+      content:
+        application/json:
+          schema:
+            required:
+              - lockReason
+            type: object
+            properties:
+              lockReason:
+                type: string
+                example: 障害の為、一時利用停止
+                maxLength: 128
+    orderIds:
+      description: 並び替え後のIDリスト
+      content:
+        application/json:
+          schema:
+            required:
+              - orderIds
+            type: object
+            properties:
+              orderIds:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+                example:
+                  - 3
+                  - 1
+                  - 2
